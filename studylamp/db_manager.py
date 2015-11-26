@@ -5,13 +5,12 @@ from math import hypot
 
 class DBManager:
     def __init__(self, db_name):
-        # self.cursor = sqlite3.connect(db_name).cursor
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
 
-    def page_state(self, page):
-        self.cursor.execute('SELECT type, chapter_num, level FROM page WHERE page_num=%s' % page)
-        result = self.cursor.fetchone()
+    def page_state(self, cursor, page):
+        cursor.execute('SELECT type, chapter_num, level FROM page WHERE page_num=%s' % page)
+        result = cursor.fetchone()
         type = result[0]
         chapter_num = result[1]
         level = result[2]
@@ -19,83 +18,84 @@ class DBManager:
         if type == 'LEARNING':
             return 'LEARNING'
         elif type == 'EXERCISE':
-            self.cursor.execute('''
+            cursor.execute('''
             SELECT graded
             FROM user_answer
             WHERE chapter_num=%s AND level=%s;
             ''' % (chapter_num, level))
-            if self.cursor.fetchone()[0] == 'TRUE':
+            if cursor.fetchone()[0] == 'TRUE':
                 return 'GRADED'
             else:
                 return 'SOLVING'
 
-    def check_answer(self, page, check_x, check_y):
+    def check_answer(self, cursor, page, check_x, check_y):
         # fetch chapter and level information corresponding to page
-        self.cursor.execute('''
+        cursor.execute('''
         SELECT chapter_num, level
         FROM page
         WHERE page_num=%s
         ''' % page)
-        result = self.cursor.fetchone()
+        result = cursor.fetchone()
         chapter_num = result[0]
         level = result[1]
 
         # fetch answer location information corresponding to page
-        self.cursor.execute('''
+        cursor.execute('''
         SELECT x, y, prob_num, ans_num
         FROM ans_location
         WHERE page_num=%s
         ''' % page)
-        results = self.cursor.fetchall()
+        results = cursor.fetchall()
 
         # find problem and answer number which has minimum distance from checked location
         min_dist = 99999
         min_result = None
         for result in results:
-            dist = hypot(check_x - result[0], check_y - result[1])
+            dist = hypot(int(check_x) - result[0], int(check_y) - result[1])
             if dist < min_dist:
                 min_dist = dist
                 min_result = result
 
-        prob_num = min_result[2]
-        ans_num = min_result[3]
+        if min_dist < 10:
+            prob_num = min_result[2]
+            ans_num = min_result[3]
 
-        self.cursor.execute('''
-        UPDATE user_answer
-        SET user_answer=%s, solved='TRUE'
-        WHERE chapter_num=%s AND level=%s AND prob_num=%s
-        ''' % (ans_num, chapter_num, level, prob_num))
+            cursor.execute('''
+            UPDATE user_answer
+            SET user_answer=%s, solved='TRUE'
+            WHERE chapter_num=%s AND level=%s AND prob_num=%s
+            ''' % (ans_num, chapter_num, level, prob_num))
 
-        print 'answer %s checked at chapter %s, level %s, problem %s' % (ans_num, chapter_num, level, prob_num)
-        self.conn.commit()
+            print 'answer %s checked at chapter %s, level %s, problem %s' % (ans_num, chapter_num, level, prob_num)
 
-    def chapter_name_by_page(self, page):
-        self.cursor.execute('''
-        SELECT chpater_num
+
+    def chapter_by_page(self, cursor, page):
+        cursor.execute('''
+        SELECT chapter_num
         FROM page
         WHERE page_num=%s
         ''' % page)
 
-        chapter_num = self.cursor.fetchone()[0]
+        chapter_num = cursor.fetchone()[0]
 
-        self.cursor.execute('''
+        cursor.execute('''
         SELECT chapter_name
         FROM chapter
         WHERE chapter_num=%s
         ''' % chapter_num)
 
-        chapter_name = self.cursor.fetchone()[0]
+        chapter_name = cursor.fetchone()[0]
 
-        return chapter_name
+        return chapter_num, chapter_name
 
-    def problem_state(self, chapter_num):
-        self.cursor.execute('''
+    def problem_state(self, cursor, chapter_num):
+        cursor.execute('''
         SELECT solved
         FROM user_answer
         WHERE chapter_num=%s
         ''' % chapter_num)
 
-        results = self.cursor.fetchall()
+        results = cursor.fetchall()
         total = 0
         solved = 0
 

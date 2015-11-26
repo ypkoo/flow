@@ -1,11 +1,9 @@
 __author__ = 'koo'
 
-from connection import *
+from network import *
 
 def main():
-
-    comm.start()
-
+    server.start()
 
 
 if __name__ == "__main__":

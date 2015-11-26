@@ -19,13 +19,13 @@ class Server(threading.Thread):
         threading.Thread.__init__(self)
         try :
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            print 'Socket created'
+            print 'Server socket created'
         except socket.error, msg :
             print 'Failed to create socket. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
             sys.exit()
 
         try:
-            self.recv_socket.bind(RECV_ADDR)
+            self.server_socket.bind(RECV_ADDR)
         except socket.error , msg:
             print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
             sys.exit()
@@ -41,7 +41,7 @@ class Client(object):
     def __init__(self):
         try :
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            print 'Socket created'
+            print 'Client socket created'
         except socket.error, msg :
             print 'Failed to create socket. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
             sys.exit()
@@ -53,8 +53,6 @@ class Client(object):
     def sendto_saehun(self, msg):
         self.client_socket.sendto(msg, SEND_ADDR2)
         print "send to saehun. msg: %s" % msg
-
-
 
 server = Server()
 client = Client()

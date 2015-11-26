@@ -1,7 +1,6 @@
 __author__ = 'koo'
 
-from network import client
-import threading
+import network
 from db_manager import *
 from state import *
 
@@ -21,8 +20,10 @@ CHECK_X_IDX = 2
 CHECK_Y_IDX = 3
 PAGE_IDX = 4
 
+
+
 def msg_dispatcher(msg):
-    state_ = state.state()
+    state_ = state.state
 
     if state_ == START:
         start_state_handler(msg)
@@ -47,7 +48,7 @@ def start_state_handler(msg_):
 # virtual button recognition
 def menu_state_handler(msg_):
     state.set_state(STUDY)
-    client.sendto_saehun("1;-1;%s;1" % state.title)
+    network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
 
 def study_state_handler(msg_):
@@ -59,29 +60,39 @@ def study_state_handler(msg_):
         check_y = msg[CHECK_Y_IDX]
         page = msg[PAGE_IDX] - 1
     else:
-        check_x = msg[CHECK_X_IDX] - 0.5
+        # this is temporary implementation
+        #check_x = msg[CHECK_X_IDX] - 0.5
+        check_x = msg[CHECK_X_IDX]
         check_y = msg[CHECK_Y_IDX]
         page = msg[PAGE_IDX]
 
-    page_state = db.page_state(page)
-    chapter_name = db.chapter_name_by_page(page)
+    conn = sqlite3.connect('studylamp.db')
+    cursor = conn.cursor()
+
+    page_state = db.page_state(cursor, page)
+    chapter_num, chapter_name = db.chapter_by_page(cursor, page)
 
     if page_state == 'LEARNING':
         # message format: code;page_number;chapter_name;media_name;back
         msg_to_send = ';'.join([LEARNING, page, chapter_name, '-1', '-1'])
-        client.sendto_saehun(msg_to_send)
+        network.client.sendto_saehun(msg_to_send)
     elif page_state == 'SOLVING':
         # message format: code;page_number;total_problems;solved_problems;back
         if check_x != -1 and check_y != -1:
-            db.check_answer(page, check_x, check_y)
+            db.check_answer(cursor, page, check_x, check_y)
 
-        total_prob_num, solved_prob_num = db.problem_state(chapter_name)
+        total_prob_num, solved_prob_num = db.problem_state(cursor, chapter_num)
 
-        msg_to_send = ';'.join([SOLVING, page, total_prob_num, solved_prob_num, '-1'])
-        client.sendto_saehun(msg_to_send)
+        msg_to_send = ';'.join([SOLVING, str(page), str(total_prob_num), str(solved_prob_num), '-1'])
+        network.client.sendto_saehun(msg_to_send)
     elif page_state == 'GRADED':
         # message format: code;page_number;total_problems;correct_answers;problem_number_to_show;back
         pass
     else:
         pass
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
 
