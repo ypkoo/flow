@@ -51,12 +51,13 @@ class DBManager:
         min_dist = 99999
         min_result = None
         for result in results:
-            dist = hypot(int(check_x) - result[0]*width, int(check_y) - result[1]*height)
+            dist = hypot(float(check_x) - result[0]*width, float(check_y) - result[1]*height)
+            print check_x, result[0]*width, check_y, result[1]*height, result[2]
             if dist < min_dist:
                 min_dist = dist
                 min_result = result
 
-        if min_dist < 10:
+        if min_dist < 100:
             prob_num = min_result[2]
             ans_num = min_result[3]
 

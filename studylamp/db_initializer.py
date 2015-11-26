@@ -27,8 +27,8 @@ if __name__ == "__main__":
         '''
         CREATE TABLE ans_location(
         page_num INT REFERENCES page(page_num) NOT NULL,
-        x INT NOT NULL,
-        y INT NOT NULL,
+        x FLOAT NOT NULL,
+        y FLOAT NOT NULL,
         prob_num INT NOT NULL,
         ans_num INT NOT NULL);
         '''
@@ -121,17 +121,11 @@ if __name__ == "__main__":
     cursor.execute("INSERT INTO answer (chapter_num, level, prob_num, ans_num) VALUES (11, 3, 3, 1)")
 
     # insert ans_location records
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 5, 5, 1, 1)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 50, 50, 1, 2)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 50, 80, 1, 3)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 30, 70, 1, 4)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 40, 50, 1, 5)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 100, 50, 2, 1)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 130, 50, 2, 2)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0, 80, 2, 3)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 5, 50, 2, 4)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 5, 200, 2, 5)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 200, 300, 3, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.09717, 0.17284, 1, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.17004, 0.32716, 2, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.24291, 0.48765, 3, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.31174, 0.62963, 4, 4)")
+    
 
 
     # insert user_answer records

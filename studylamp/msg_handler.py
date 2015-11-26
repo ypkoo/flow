@@ -59,18 +59,20 @@ def study_state_handler(msg_):
     height = int(msg[HEIGHT_IDX])
 
     # if check occurs
-    if msg[CHECK_X_IDX] != -1 and msg[CHECK_Y_IDX] != -1:
+    if msg[CHECK_X_IDX] != '-1' and msg[CHECK_Y_IDX] != '-1':
         # Current implementation uses only right page number. So we need post processing.
-        if msg[CHECK_X_IDX] < width * 0.5:
+        if float(msg[CHECK_X_IDX]) < width * 0.5:
             check_x = msg[CHECK_X_IDX]
             check_y = msg[CHECK_Y_IDX]
-            page = msg[PAGE_IDX] - 1
+            # page = msg[PAGE_IDX] - 1
+            page = 40
         else:
             # this is temporary implementation
             #check_x = msg[CHECK_X_IDX] - 0.5
-            check_x = msg[CHECK_X_IDX] - width * 0.5
+            check_x = float(msg[CHECK_X_IDX]) - width * 0.5
             check_y = msg[CHECK_Y_IDX]
-            page = msg[PAGE_IDX]
+            # page = msg[PAGE_IDX]
+            page = 40
 
         conn = sqlite3.connect('studylamp.db')
         cursor = conn.cursor()
