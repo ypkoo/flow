@@ -10,7 +10,7 @@ PROGRESS = 5
 
 class StateManager:
     def __init__(self):
-        self._state = STUDY
+        self._state = START
         self._title = None
 
     @property

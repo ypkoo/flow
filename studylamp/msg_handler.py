@@ -25,11 +25,11 @@ PAGE_IDX = 4
 def msg_dispatcher(msg):
     state_ = state.state
 
-    if state_ == START:
+    if state_ == 1:
         start_state_handler(msg)
-    elif state_ == MENU:
+    elif state_ == 2:
         menu_state_handler(msg)
-    elif state_ == STUDY:
+    elif state_ == 3:
         study_state_handler(msg)
     else:
         pass
@@ -39,15 +39,15 @@ def start_state_handler(msg_):
     title = "EBS SooNueng Math"
 
     if title:
-        state.title(title)
+        state.title = title
         print("book %s is recognized." % title)
-        state.set_state(MENU)
+        state.state = 2
     else:
         pass
 
 # virtual button recognition
 def menu_state_handler(msg_):
-    state.set_state(STUDY)
+    state.state = 3
     network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
 
