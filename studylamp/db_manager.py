@@ -28,7 +28,7 @@ class DBManager:
             else:
                 return 'SOLVING'
 
-    def check_answer(self, cursor, page, check_x, check_y):
+    def check_answer(self, cursor, page, check_x, check_y, width, height):
         # fetch chapter and level information corresponding to page
         cursor.execute('''
         SELECT chapter_num, level
@@ -51,7 +51,7 @@ class DBManager:
         min_dist = 99999
         min_result = None
         for result in results:
-            dist = hypot(int(check_x) - result[0], int(check_y) - result[1])
+            dist = hypot(int(check_x) - result[0]*width, int(check_y) - result[1]*height)
             if dist < min_dist:
                 min_dist = dist
                 min_result = result
