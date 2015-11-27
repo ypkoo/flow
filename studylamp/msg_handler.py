@@ -13,7 +13,7 @@ GRADED = '4'
 PROGRESS = '5'
 MAKEUP_NOTE = '6'
 
-# msg indexes
+# msg indexes in study state
 WIDTH_IDX = 0
 HEIGHT_IDX = 1
 FINGER_X_IDX = 2
@@ -38,6 +38,7 @@ def msg_dispatcher(msg):
 
 def start_state_handler(msg_):
     # temporary implementation. book cover recognizing needed.
+    # title = db.get_book_title(hash_value)
     title = "EBS SooNueng Math"
 
     if title:
@@ -47,8 +48,16 @@ def start_state_handler(msg_):
     else:
         pass
 
+button_pushed_count = 0
+LOGOUT_BUTTON = 0
+LEARNING_BUTTON = 1
+PROGRESS_BUTTON = 2
+MAKEUP_BUTTON = 3
 # virtual button recognition
 def menu_state_handler(msg_):
+    # temporary implementations
+    global button_pushed_count
+     
     state.state = 3
     network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
@@ -57,6 +66,17 @@ def study_state_handler(msg_):
     msg = msg_.split(";")
     width = int(msg[WIDTH_IDX])
     height = int(msg[HEIGHT_IDX])
+
+    # for mitigating instable page recognition.
+    try:
+        new_page = int(msg[PAGE_IDX])
+    except:
+        return
+
+    page = state.get_current_page(new_page)
+
+    if page == -1:
+        return
 
     # if check occurs
     if msg[CHECK_X_IDX] != '-1' and msg[CHECK_Y_IDX] != '-1':

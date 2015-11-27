@@ -91,7 +91,7 @@ class DBManager:
 
     def problem_state(self, cursor, chapter_num):
         cursor.execute('''
-        SELECT solved
+        SELECT solved, correct, level, prob_num
         FROM user_answer
         WHERE chapter_num=%s
         ''' % chapter_num)
@@ -99,12 +99,70 @@ class DBManager:
         results = cursor.fetchall()
         total = 0
         solved = 0
+        correct = 0
+        correct_probs = []
+        wrong_probs = []
 
         for result in results:
             total = total + 1
             if result[0] == 'TRUE':
                 solved = solved + 1
+            if result[1] == 'TRUE':
+                correct = correct + 1
+                correct_probs.append([result[2], result[3]])
+            else:
+                wrong_probs.append([result[2], result[3]])
 
-        return total, solved
+        return total, solved, correct, correct_probs, wrong_probs
+
+    def grade_one_chapter(self, cursor, chapter_num):
+        correct_num = 0
+        wrong_num = 0
+        correct_probs = []
+        wrong_probs = []
+
+        cursor.execute('''
+        SELECT level, prob_num, user_answer, solved
+        FROM user_answer
+        WHERE chapter_num=%s
+        ''' % chapter_num)
+
+        user_answers = cursor.fetchall()
+
+        for user_answer in user_answers:
+            level = user_answer[0]
+            prob_num = user_answer[1]
+            answer = user_answer[2]
+            solved = user_answer[3]
+
+            if solved == 'TRUE':
+                cursor.execute('''
+                SELECT ans_num
+                FROM answer
+                WHERE chapter_num=%s AND level=%s AND prob_num=%s
+                ''' % (chapter_num, level, prob_num))
+
+                correct_answer = cursor.fetchone()[0]
+
+                if answer == correct_answer:
+                    correct_num = correct_num + 1
+                    correct_probs.append([level, prob_num])
+
+                    cursor.execute('''
+                    UPDATE user_answer
+                    SET graded=%s AND correct=%s
+                    WHERE chapter_num=%s AND level=%s AND prob_num=%s
+                    ''' % ('TRUE', 'TRUE', chapter_num, level, prob_num))
+
+                else:
+                    wrong_num = wrong_num + 1
+                    wrong_probs.append([level, prob_num])
+
+                    cursor.execute('''
+                    UPDATE user_answer
+                    SET graded=%s AND correct=%s
+                    WHERE chapter_num=%s AND level=%s AND prob_num=%s
+                    ''' % ('TRUE', 'FALSE', chapter_num, level, prob_num))
+
 
 db = DBManager('studylamp.db')
