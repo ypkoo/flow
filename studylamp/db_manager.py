@@ -8,6 +8,45 @@ class DBManager:
         self.conn = sqlite3.connect(db_name)
         self.cursor = self.conn.cursor()
 
+    def get_book_title(self, cursor, hash_val):
+
+        # comparing two hash value. (from pHash)
+        def hamming_distance(hash1, hash2):
+            x = hash1 ^ hash2
+            m1 = 0x5555555555555555
+            m2 = 0x3333333333333333
+            h01 = 0x0101010101010101
+            m4 = 0x0f0f0f0f0f0f0f0f
+
+            x -= (x >> 1) & m1
+            x = (x & m2) + ((x >> 2) & m2)
+            x = (x + (x >> 4)) & m4
+
+            return (x * h01) >> 56
+            #return bin(x).count('1')
+
+        cursor.execute('''
+            SELECT hash_val, book_title
+            FROM covers
+            '''
+        )
+
+        results = cursor.fetchall()
+
+        max_dist = -1
+        book_title = None
+        for result in results:
+            dist = hamming_distance(int(hash_val, 16), int(result[0], 16))
+            print bin(dist).count('1')
+            if dist > max_dist:
+                max_dist = dist
+                book_title = result[1]
+
+        if max_dist > 0.7:
+            return book_title 
+        else:
+            return False
+
     def page_state(self, cursor, page):
         cursor.execute('SELECT type, chapter_num, level FROM page WHERE page_num=%s' % page)
         result = cursor.fetchone()
@@ -166,3 +205,26 @@ class DBManager:
 
 
 db = DBManager('studylamp.db')
+
+if __name__ == "__main__":
+    conn = sqlite3.connect('cover.db')
+    cursor = conn.cursor()
+
+    hash_val = '15730864853536670846'
+    hash_vals = ['15730864853536670846',
+                 '99990864859999670846',
+                 '15738888853536888846',
+                 '10000864000036670846',
+                 '00000000000000000000',
+                 '99999999999999999999',
+                 '15730794484792497278',
+                 '15730794484782497279']
+
+    for hash_val in hash_vals:
+        print 'as'
+        title = db.get_book_title(cursor, hash_val)
+
+    # title = db.get_book_title(cursor, hash_val)
+    #
+    # if title:
+    #     print title

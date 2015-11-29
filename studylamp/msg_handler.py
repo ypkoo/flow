@@ -38,7 +38,12 @@ def msg_dispatcher(msg):
 
 def start_state_handler(msg_):
     # temporary implementation. book cover recognizing needed.
-    # title = db.get_book_title(hash_value)
+    # hash_val = msg_.split(';')[0]
+    # conn = sqlite3.connect('studylamp.db')
+    # cursor = conn.cursor()
+    # title = db.get_book_title(cursor, hash_val)
+    # cursor.close()
+    # conn.close()
     title = "EBS SooNueng Math"
 
     if title:
@@ -46,7 +51,7 @@ def start_state_handler(msg_):
         print("book %s is recognized." % title)
         state.state = 2
     else:
-        pass
+        network.client.sendto_sunghoi('0')
 
 button_pushed_count = 0
 LOGOUT_BUTTON = 0
