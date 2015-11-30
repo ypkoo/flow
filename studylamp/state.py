@@ -1,12 +1,11 @@
 __author__ = 'koo'
 
 # states
-BOOTING = 0
-START = 1
-MENU = 2
-STUDY = 3
-REVIEW = 4
-PROGRESS = 5
+START = 0
+MENU = 1
+STUDY = 2
+REVIEW = 5
+PROGRESS = 6
 
 class StateManager:
     def __init__(self):

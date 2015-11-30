@@ -5,41 +5,54 @@ from db_manager import *
 from state import *
 
 # msg code
-START = '0'
-MENU = '1'
-LEARNING = '2'
-SOLVING = '3'
-GRADED = '4'
-PROGRESS = '5'
-MAKEUP_NOTE = '6'
+START = 0
+MENU = 1
+LEARNING = 2
+SOLVING = 3
+GRADED = 4
+PROGRESS = 5
+REVIEW = 6
 
 # msg indexes in study state
-WIDTH_IDX = 0
-HEIGHT_IDX = 1
-FINGER_X_IDX = 2
-FINGER_Y_IDX = 3
-CHECK_X_IDX = 4
-CHECK_Y_IDX = 5
-PAGE_IDX = 6
+STATE_IDX = 0
+WIDTH_IDX = 1
+HEIGHT_IDX = 2
+FINGER_X_IDX = 3
+FINGER_Y_IDX = 4
+CHECK_X_IDX = 5
+CHECK_Y_IDX = 6
+PAGE_IDX = 7
+BUTTON_IDX = 8
 
 
 
 def msg_dispatcher(msg):
     state_ = state.state
 
-    if state_ == 1:
+    # book cover recognition
+    if state_ == 0:
         start_state_handler(msg)
-    elif state_ == 2:
+    # menu
+    elif state_ == 1:
         menu_state_handler(msg)
-    elif state_ == 3:
+    # study
+    elif state_ == 2:
         study_state_handler(msg)
-    else:
+    # progress
+    elif state_ == 5:
+        pass
+    # review
+    elif state_ == 6:
         pass
 
 def start_state_handler(msg_):
-    # temporary implementation. book cover recognizing needed.
-    
-    hash_val = msg_.split(';')[1]
+    msg = msg_.split(';')[1]
+
+    if msg[0] != 0:
+        network.client.sendto_sunghoi('0')
+        return
+
+    hash_val = msg[1]
     conn = sqlite3.connect('studylamp.db')
     cursor = conn.cursor()
     title = db.get_book_title(cursor, hash_val)
@@ -54,32 +67,76 @@ def start_state_handler(msg_):
     else:
         network.client.sendto_sunghoi('0')
 
-STUDY_BUTTON_IDX = 0
-PROG_BUTTON_IDX = 1
-REVIEW_BUTTON_IDX = 2
-BACK_BUTTON_IDX = 3
-button_pushed_count = 0
-prev_button = None
+class ButtonHandler(object):
+    STUDY_BUTTON = 0
+    PROG_BUTTON = 1
+    REVIEW_BUTTON = 2
+    BACK_BUTTON = 3
+    button_pushed_count = 0
+    prev_button = None
+    cur_button = None
+
+    def get_pushed_button(self, state, buttons):
+        back_button = buttons[-1]
+
+        if back_button == '1' and (self.prev_button == self.BACK_BUTTON or self.prev_button == None):
+            self.button_pushed_count = self.button_pushed_count + 1
+            self.cur_button = self.BACK_BUTTON
+        elif buttons.count('1') >= 2:
+            self.button_pushed_count = 0
+            return False
+        elif state == MENU:
+            self.button_pushed_count = self.button_pushed_count + 1
+            if buttons[0] == '1' and (self.prev_button == self.STUDY_BUTTON or self.prev_button == None):
+                self.cur_button = self.STUDY_BUTTON
+            elif buttons[1] == '1' and (self.prev_button == self.PROG_BUTTON or self.prev_button == None):
+                self.cur_button = self.PROG_BUTTON
+            elif buttons[2] == '1'and (self.prev_button == self.REVIEW_BUTTON or self.prev_button == None):
+                self.cur_button = self.REVIEW_BUTTON
+        elif state == LEARNING:
+            pass
+        elif state == SOLVING:
+            pass
+        elif state == GRADED:
+            pass
+        elif state == PROGRESS:
+            pass
+        elif state == REVIEW:
+            pass
+        else:
+            return False
+
+        if self.button_pushed_count == 3:
+            self.button_pushed_count = 0
+            ret = self.cur_button
+            self.cur_button = None
+            return ret
+        else:
+            return False
+
+button_handler = ButtonHandler()
 # virtual button recognition
 def menu_state_handler(msg_):
-    # temporary implementations
-    global button_pushed_count, prev_button
-
     msg = msg_.split(';')
-    buttons = msg[1]
-    if msg[0] != 2:
-        # send current state again
-        pass
+    state_ = state.state
+    buttons = msg[BUTTON_IDX]
+    if int(msg[0]) != MENU:
+        network.client.sendto_sunghoi('1')
+        return
     else:
-        if buttons[BACK_BUTTON_IDX] == '1' and prev_button == BACK_BUTTON_IDX:
-            button_pushed_count = button_pushed_count + 1
-            if button_pushed_count == 3:
-                
+        button = button_handler(state, buttons)
+        if button:
+            if button == button_handler.STUDY_BUTTON:
+                state.state = 2
+            elif button == button_handler.PROG_BUTTON:
+                state.state = 3
+            elif button == button_handler.REVIEW_BUTTON:
+                state.state = 4
+            elif button == button_handler.BACK_BUTTON:
+                state.state = 0
+            network.client.sendto_sunghoi(state.state)
+            network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
-
-     
-    state.state = 3
-    network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
 
 def study_state_handler(msg_):
@@ -104,15 +161,15 @@ def study_state_handler(msg_):
         if float(msg[CHECK_X_IDX]) < width * 0.5:
             check_x = msg[CHECK_X_IDX]
             check_y = msg[CHECK_Y_IDX]
-            # page = msg[PAGE_IDX] - 1
-            page = 40
+            page = page - 1
+            # page = 40
         else:
             # this is temporary implementation
             #check_x = msg[CHECK_X_IDX] - 0.5
             check_x = float(msg[CHECK_X_IDX]) - width * 0.5
             check_y = msg[CHECK_Y_IDX]
             # page = msg[PAGE_IDX]
-            page = 40
+            # page = 40
 
         conn = sqlite3.connect('studylamp.db')
         cursor = conn.cursor()
@@ -142,5 +199,7 @@ def study_state_handler(msg_):
         conn.commit()
         cursor.close()
         conn.close()
+
+    print 'current page:', page
 
 
