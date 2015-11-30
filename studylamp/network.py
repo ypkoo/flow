@@ -52,7 +52,7 @@ class Client(object):
 
     def sendto_saehun(self, msg):
         self.client_socket.sendto(msg, SEND_ADDR2)
-        print "send to saehun. msg: %s" % msg
+        # print "send to saehun. msg: %s" % msg
 
 server = Server()
 client = Client()

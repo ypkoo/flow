@@ -1,27 +1,34 @@
 __author__ = 'koo'
 
 # states
-START = 0
+COVER = 0
 MENU = 1
-STUDY = 2
+LEARNING = 2
+SOLVING = 3
+GRADED = 4
 REVIEW = 5
 PROGRESS = 6
+BUFFER = 7
 
 class StateManager:
     def __init__(self):
-        self._state = STUDY
+        self._state = COVER
         self._title = None
         cur_page = -1
         page_count = 0
         new_pages = []
 
-    @property
-    def state(self):
+    def get_state(self):
         return self._state
 
-    @state.setter
-    def state(self, new_state):
-        self._state = new_state
+    def set_state(self, new_state):
+        if new_state != self._state:
+            changed = True
+        else:
+            changed = False
+        if changed:
+            print 'state changed:', new_state
+        return changed
 
     @property
     def title(self):
