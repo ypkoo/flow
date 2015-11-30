@@ -38,13 +38,14 @@ def msg_dispatcher(msg):
 
 def start_state_handler(msg_):
     # temporary implementation. book cover recognizing needed.
-    # hash_val = msg_.split(';')[0]
-    # conn = sqlite3.connect('studylamp.db')
-    # cursor = conn.cursor()
-    # title = db.get_book_title(cursor, hash_val)
-    # cursor.close()
-    # conn.close()
-    title = "EBS SooNueng Math"
+    
+    hash_val = msg_.split(';')[1]
+    conn = sqlite3.connect('studylamp.db')
+    cursor = conn.cursor()
+    title = db.get_book_title(cursor, hash_val)
+    cursor.close()
+    conn.close()
+    # title = "EBS SooNueng Math"
 
     if title:
         state.title = title
@@ -53,15 +54,29 @@ def start_state_handler(msg_):
     else:
         network.client.sendto_sunghoi('0')
 
+STUDY_BUTTON_IDX = 0
+PROG_BUTTON_IDX = 1
+REVIEW_BUTTON_IDX = 2
+BACK_BUTTON_IDX = 3
 button_pushed_count = 0
-LOGOUT_BUTTON = 0
-LEARNING_BUTTON = 1
-PROGRESS_BUTTON = 2
-MAKEUP_BUTTON = 3
+prev_button = None
 # virtual button recognition
 def menu_state_handler(msg_):
     # temporary implementations
-    global button_pushed_count
+    global button_pushed_count, prev_button
+
+    msg = msg_.split(';')
+    buttons = msg[1]
+    if msg[0] != 2:
+        # send current state again
+        pass
+    else:
+        if buttons[BACK_BUTTON_IDX] == '1' and prev_button == BACK_BUTTON_IDX:
+            button_pushed_count = button_pushed_count + 1
+            if button_pushed_count == 3:
+                
+
+
      
     state.state = 3
     network.client.sendto_saehun("1;-1;%s;1" % state.title)

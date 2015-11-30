@@ -33,7 +33,7 @@ class Server(threading.Thread):
     def run(self):
         while True:
             msg = self.server_socket.recv(1024) # buffer size is 1024 bytes
-            print "received message:", msg
+            # print "received message:", msg
             msg_dispatcher(msg)
 
 
