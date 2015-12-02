@@ -79,7 +79,7 @@ button_handler = ButtonHandler()
 
 def msg_dispatcher(msg):
     cur_state = state.get_state()
-    msg_state = int(msg.split(';')[0])
+    msg_state = int(msg.split(';')[STATE_IDX])
 
     if cur_state != msg_state:
         network.client.sendto_sunghoi(cur_state)
@@ -103,8 +103,7 @@ def msg_dispatcher(msg):
         buffer_handler(msg)
 
 def start_state_handler(msg_):
-    msg = msg_.split(';')[1]
-
+    msg = msg_.split(';')
     hash_val = msg[1]
     conn = sqlite3.connect('studylamp.db')
     cursor = conn.cursor()
@@ -174,7 +173,7 @@ def buffer_handler(msg_):
 def learning_state_handler(msg_):
     msg = msg_.split(';')
     buttons = msg[BUTTON_IDX]
-    cur_state = state.state
+    cur_state = state.get_state()
     button = button_handler.get_pushed_button(cur_state, buttons)
 
     if button:
@@ -182,19 +181,19 @@ def learning_state_handler(msg_):
             # need to be implemented. play video.
             pass
         elif button == button_handler.BACK_BUTTON:
-            state.state = MENU
+            state.set_state(MENU)
             network.client.sendto_sunghoi(state.state)
         network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
 def solving_state_handler(msg_):
     msg = msg_.split(';')
     buttons = msg[BUTTON_IDX]
-    cur_state = state.state
+    cur_state = state.get_state()
     button = button_handler.get_pushed_button(cur_state, buttons)
 
     if button:
         if button == button_handler.BACK_BUTTON:
-            state.state = MENU
+            state.set_state(MENU)
             network.client.sendto_sunghoi(state.state)
 
     width = int(msg[WIDTH_IDX])
@@ -234,12 +233,12 @@ def solving_state_handler(msg_):
 def graded_state_handler(msg_):
     msg = msg_.split(';')
     buttons = msg[BUTTON_IDX]
-    cur_state = state.state
+    cur_state = state.get_state()
     button = button_handler.get_pushed_button(cur_state, buttons)
 
     if button:
         if button == button_handler.BACK_BUTTON:
-            state.state = MENU
+            state.set_state(MENU)
             network.client.sendto_sunghoi(state.state)
 
     width = int(msg[WIDTH_IDX])

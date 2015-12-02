@@ -12,6 +12,17 @@ if __name__ == "__main__":
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
+    # book cover db initialization
+    cursor.execute(
+        '''
+        CREATE TABLE covers(
+        hash_val TEXT PRIMARY KEY NOT NULL,
+        book_title TEXT NOT NULL);
+        '''
+    )
+
+    cursor.execute("INSERT INTO covers (hash_val, book_title) VALUES ('15730794484792497278', 'SooNeung Math')")
+
     # create tables
     cursor.execute(
         '''
