@@ -26,11 +26,11 @@ PAGE_IDX = 7
 BUTTON_IDX = 8
 
 class ButtonHandler(object):
-    STUDY_BUTTON = 0
-    PROG_BUTTON = 1
-    REVIEW_BUTTON = 2
-    BACK_BUTTON = 3
-    PLAY_BUTTON = 4
+    STUDY_BUTTON = 1
+    PROG_BUTTON = 2
+    REVIEW_BUTTON = 3
+    BACK_BUTTON = 4
+    PLAY_BUTTON = 5
     button_pushed_count = 0
     prev_button = None
     cur_button = None
@@ -38,6 +38,8 @@ class ButtonHandler(object):
     def get_pushed_button(self, state, buttons):
         back_button = buttons[-1]
 
+        print 'state:', state, MENU
+        
         if back_button == '1' and (self.prev_button == self.BACK_BUTTON or self.prev_button == None):
             self.button_pushed_count = self.button_pushed_count + 1
             self.cur_button = self.BACK_BUTTON
@@ -45,8 +47,10 @@ class ButtonHandler(object):
             self.button_pushed_count = 0
             return False
         elif state == MENU:
+            print 'pushed count', self.button_pushed_count
             self.button_pushed_count = self.button_pushed_count + 1
             if buttons[0] == '1' and (self.prev_button == self.STUDY_BUTTON or self.prev_button == None):
+                print 'study button pushed'
                 self.cur_button = self.STUDY_BUTTON
             elif buttons[1] == '1' and (self.prev_button == self.PROG_BUTTON or self.prev_button == None):
                 self.cur_button = self.PROG_BUTTON
@@ -67,10 +71,11 @@ class ButtonHandler(object):
         else:
             return False
 
-        if self.button_pushed_count == 3:
+        if self.button_pushed_count == 1:
             self.button_pushed_count = 0
             ret = self.cur_button
             self.cur_button = None
+            print 'return button:', ret
             return ret
         else:
             return False
@@ -80,6 +85,8 @@ button_handler = ButtonHandler()
 def msg_dispatcher(msg):
     cur_state = state.get_state()
     msg_state = int(msg.split(';')[STATE_IDX])
+
+    print cur_state, msg_state
 
     if cur_state != msg_state:
         network.client.sendto_sunghoi(cur_state)
@@ -116,6 +123,7 @@ def start_state_handler(msg_):
         state.title = title
         print("book %s is recognized." % title)
         state.set_state(MENU)
+        network.client.sendto_sunghoi(MENU)
     else:
         network.client.sendto_sunghoi(COVER)
 
@@ -124,7 +132,7 @@ def menu_state_handler(msg_):
     msg = msg_.split(';')
     buttons = msg[BUTTON_IDX]
 
-    button = button_handler.get_pushed_button(state, buttons)
+    button = button_handler.get_pushed_button(state.get_state(), buttons)
     if button:
         if button == button_handler.STUDY_BUTTON:
             state.set_state(BUFFER)
@@ -134,7 +142,7 @@ def menu_state_handler(msg_):
             state.set_state(REVIEW)
         elif button == button_handler.BACK_BUTTON:
             state.set_state(COVER)
-        network.client.sendto_sunghoi(state.state)
+        network.client.sendto_sunghoi(state.get_state())
         network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
 def buffer_handler(msg_):

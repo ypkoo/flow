@@ -23,6 +23,7 @@ class StateManager:
 
     def set_state(self, new_state):
         if new_state != self._state:
+            self._state = new_state
             changed = True
         else:
             changed = False
