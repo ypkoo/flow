@@ -14,9 +14,9 @@ class StateManager:
     def __init__(self):
         self._state = COVER
         self._title = None
-        cur_page = -1
-        page_count = 0
-        new_pages = []
+        self.cur_page = -1
+        self.page_count = 0
+        self.new_pages = []
 
     def get_state(self):
         return self._state
@@ -41,8 +41,9 @@ class StateManager:
 
     def get_current_page(self, new_page):
         if new_page != self.cur_page:
-            self.new_pages.append(new_page)
-            self.page_count = self.page_count + 1
+            pass
+        self.new_pages.append(new_page)
+        self.page_count = self.page_count + 1
 
         if self.page_count == 3: 
             # recognize 3 consecutive new pages. If all 3 pages are same, change current page.

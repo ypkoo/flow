@@ -50,7 +50,11 @@ class DBManager:
     def page_state(self, cursor, page):
         cursor.execute('SELECT type, chapter_num, level FROM page WHERE page_num=%s' % page)
         result = cursor.fetchone()
-        type = result[0]
+        try:
+            type = result[0]
+        except:
+            print 'wrong page recognized'
+            return False
         chapter_num = result[1]
         level = result[2]
 
@@ -116,7 +120,10 @@ class DBManager:
         WHERE page_num=%s
         ''' % page)
 
-        chapter_num = cursor.fetchone()[0]
+        try:
+            chapter_num = cursor.fetchone()[0]
+        except:
+            return -1,-1
 
         cursor.execute('''
         SELECT chapter_name
@@ -124,8 +131,15 @@ class DBManager:
         WHERE chapter_num=%s
         ''' % chapter_num)
 
-        chapter_name = cursor.fetchone()[0]
 
+        
+        
+        try:
+            chapter_name = cursor.fetchone()[0]
+        except:
+            return -1, -1
+        
+        
         return chapter_num, chapter_name
 
     def problem_state(self, cursor, chapter_num):
