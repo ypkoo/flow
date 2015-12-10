@@ -12,6 +12,17 @@ if __name__ == "__main__":
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
 
+    # book cover db initialization
+    cursor.execute(
+        '''
+        CREATE TABLE covers(
+        hash_val TEXT PRIMARY KEY NOT NULL,
+        book_title TEXT NOT NULL);
+        '''
+    )
+
+    cursor.execute("INSERT INTO covers (hash_val, book_title) VALUES ('15730794484792497278', 'SooNeung Math')")
+
     # create tables
     cursor.execute(
         '''
@@ -62,7 +73,8 @@ if __name__ == "__main__":
         CREATE TABLE chapter(
         chapter_num INT PRIMARY KEY NOT NULL,
         chapter_name TEXT NOT NULL,
-        total_prob_num INT NOT NULL);
+        total_prob_num INT NOT NULL,
+        graded BOOL DEFAULT FALSE);
         '''
     )
 
@@ -121,10 +133,57 @@ if __name__ == "__main__":
     cursor.execute("INSERT INTO answer (chapter_num, level, prob_num, ans_num) VALUES (11, 3, 3, 1)")
 
     # insert ans_location records
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.09717, 0.17284, 1, 1)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.17004, 0.32716, 2, 2)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.24291, 0.48765, 3, 3)")
-    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.31174, 0.62963, 4, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.17358, 0.16706, 1, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.30570, 0.16706, 1, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.43782, 0.16706, 1, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.56995, 0.16706, 1, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.70207, 0.16706, 1, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.17358, 0.32941, 2, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.30570, 0.32941, 2, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.43782, 0.32941, 2, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.56995, 0.32941, 2, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.70207, 0.32941, 2, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.17358, 0.48941, 3, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.30570, 0.48941, 3, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.43782, 0.48941, 3, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.56995, 0.48941, 3, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.70207, 0.48941, 3, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.17358, 0.64941, 4, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.30570, 0.64941, 4, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.43782, 0.64941, 4, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.56995, 0.64941, 4, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.70207, 0.64941, 4, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.17358, 0.80941, 5, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.30570, 0.80941, 5, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.43782, 0.80941, 5, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.56995, 0.80941, 5, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (40, 0.70207, 0.80941, 5, 5)")
+
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.00259, 0.16706, 1, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.13730, 0.16706, 1, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.27202, 0.16706, 1, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.40674, 0.16706, 1, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.54145, 0.16706, 1, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.00259, 0.32941, 2, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.13730, 0.32941, 2, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.27202, 0.32941, 2, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.40674, 0.32941, 2, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.54145, 0.32941, 2, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.00259, 0.48941, 3, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.13730, 0.48941, 3, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.27202, 0.48941, 3, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.40674, 0.48941, 3, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.54145, 0.48941, 3, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.00259, 0.64941, 4, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.13730, 0.64941, 4, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.27202, 0.64941, 4, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.40674, 0.64941, 4, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.54145, 0.64941, 4, 5)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.00259, 0.80941, 5, 1)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.13730, 0.80941, 5, 2)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.27202, 0.80941, 5, 3)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.40674, 0.80941, 5, 4)")
+    cursor.execute("INSERT INTO ans_location (page_num, x, y, prob_num, ans_num) VALUES (41, 0.54145, 0.80941, 5, 5)")
     
 
 

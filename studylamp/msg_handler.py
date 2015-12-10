@@ -4,14 +4,15 @@ import network
 from db_manager import *
 from state import *
 
-# msg code
-START = 0
+# states
+COVER = 0
 MENU = 1
 LEARNING = 2
 SOLVING = 3
 GRADED = 4
-PROGRESS = 5
-REVIEW = 6
+REVIEW = 5
+PROGRESS = 6
+BUFFER = 7
 
 # msg indexes in study state
 STATE_IDX = 0
@@ -24,34 +25,113 @@ CHECK_Y_IDX = 6
 PAGE_IDX = 7
 BUTTON_IDX = 8
 
+class ButtonHandler(object):
+    STUDY_BUTTON = 1
+    PROG_BUTTON = 2
+    REVIEW_BUTTON = 3
+    BACK_BUTTON = 4
+    PLAY_BUTTON = 5
+    GRADE_BUTTON = 6
+    LEFT_BUTTON = 7
+    RIGHT_BUTTON = 8
+    LIST_BUTTON = 9
+    button_pushed_count = 0
+    prev_button = None
+    cur_button = None
+    grade_on = False
 
+    def get_pushed_button(self, state, buttons):
+        back_button = buttons[-1]
+        
+        if back_button == '1' and (self.cur_button == self.BACK_BUTTON or self.cur_button == None):
+            self.button_pushed_count = self.button_pushed_count + 1
+            self.cur_button = self.BACK_BUTTON
+        elif buttons.count('1') != 1:
+            self.cur_button = None
+            self.button_pushed_count = 0
+            return False
+        elif state == MENU:
+            self.button_pushed_count = self.button_pushed_count + 1
+            print 'pushed count', self.button_pushed_count
+            if buttons[0] == '1' and (self.cur_button == self.STUDY_BUTTON or self.cur_button == None):
+                print 'study button pushed'
+                self.cur_button = self.STUDY_BUTTON
+            elif buttons[1] == '1' and (self.cur_button == self.PROG_BUTTON or self.cur_button == None):
+                self.cur_button = self.PROG_BUTTON
+            elif buttons[2] == '1'and (self.cur_button == self.REVIEW_BUTTON or self.cur_button == None):
+                self.cur_button = self.REVIEW_BUTTON
+            else:
+                self.cur_button = None
+                self.button_pushed_count = 0
+        elif state == LEARNING:
+            pass
+        elif state == SOLVING:
+            if grade_on:
+                self.button_pushed_count = self.button_pushed_count + 1
+                if buttons[0] == '1' and (self.cur_button == GRADE_BUTTON or self.cur_button == None):
+                    self.cur_button = self.GRADE_BUTTON
+                else:
+                    self.cur_button = None
+                    self.button_pushed_count = 0
+        elif state == GRADED:
+            pass
+        elif state == PROGRESS:
+            pass
+        elif state == REVIEW:
+            self.button_pushed_count = self.button_pushed_count + 1
+            if buttons[0] == '1' and (self.cur_button == self.LEFT_BUTTON or self.cur_button == None):
+                self.cur_button = self.RIGHT_BUTTON
+            elif buttons[1] == '1' and (self.cur_button == self.LIST_BUTTON or self.cur_button = None):
+                self.cur_button = self.LIST_BUTTON
+            elif buttons[2] == '1' and (self.cur_button == self.RIGHT_BUTTON or self.cur_button = None):
+                self.cur_button = self.RIGHT_BUTTON
+            else:
+                self.cur_button = None
+                self.button_pushed_count = 0
+        else:
+            self.cur_button = None
+            self.button_pushed_count = 0
+            return False
+
+        if self.button_pushed_count == 3:
+            self.button_pushed_count = 0
+            ret = self.cur_button
+            self.cur_button = None
+            print 'return button:', ret
+            return ret
+        else:
+            return False
+
+button_handler = ButtonHandler()
 
 def msg_dispatcher(msg):
-    state_ = state.state
+    cur_state = state.get_state()
+    msg_state = int(msg.split(';')[STATE_IDX])
 
-    # book cover recognition
-    if state_ == 0:
-        start_state_handler(msg)
-    # menu
-    elif state_ == 1:
-        menu_state_handler(msg)
-    # study
-    elif state_ == 2:
-        study_state_handler(msg)
-    # progress
-    elif state_ == 5:
-        pass
-    # review
-    elif state_ == 6:
-        pass
-
-def start_state_handler(msg_):
-    msg = msg_.split(';')[1]
-
-    if msg[0] != 0:
-        network.client.sendto_sunghoi('0')
+    
+    if cur_state != msg_state:
+        network.client.sendto_sunghoi(cur_state)
         return
 
+    if cur_state == COVER:
+        start_state_handler(msg)
+    elif cur_state == MENU:
+        menu_state_handler(msg)
+    elif cur_state == LEARNING:
+        buffer_handler(msg)
+    elif cur_state == SOLVING:
+        buffer_handler(msg)
+    elif cur_state == GRADED:
+        buffer_handler(msg)
+    elif cur_state == PROGRESS:
+        progress_state_handler(msg)
+    elif cur_state == REVIEW:
+        review_state_handler(msg)
+    elif cur_state == BUFFER:
+        buffer_handler(msg)
+
+def start_state_handler(msg_):
+    msg = msg_.split(';')
     hash_val = msg[1]
     conn = sqlite3.connect('studylamp.db')
     cursor = conn.cursor()
@@ -63,86 +143,36 @@ def start_state_handler(msg_):
     if title:
         state.title = title
         print("book %s is recognized." % title)
-        state.state = 2
+        state.set_state(MENU)
+        network.client.sendto_sunghoi(MENU)
+        network.client.sendto_saehun("1;-1;%s;-1" % title);
     else:
-        network.client.sendto_sunghoi('0')
+        network.client.sendto_sunghoi(COVER)
 
-class ButtonHandler(object):
-    STUDY_BUTTON = 0
-    PROG_BUTTON = 1
-    REVIEW_BUTTON = 2
-    BACK_BUTTON = 3
-    button_pushed_count = 0
-    prev_button = None
-    cur_button = None
-
-    def get_pushed_button(self, state, buttons):
-        back_button = buttons[-1]
-
-        if back_button == '1' and (self.prev_button == self.BACK_BUTTON or self.prev_button == None):
-            self.button_pushed_count = self.button_pushed_count + 1
-            self.cur_button = self.BACK_BUTTON
-        elif buttons.count('1') >= 2:
-            self.button_pushed_count = 0
-            return False
-        elif state == MENU:
-            self.button_pushed_count = self.button_pushed_count + 1
-            if buttons[0] == '1' and (self.prev_button == self.STUDY_BUTTON or self.prev_button == None):
-                self.cur_button = self.STUDY_BUTTON
-            elif buttons[1] == '1' and (self.prev_button == self.PROG_BUTTON or self.prev_button == None):
-                self.cur_button = self.PROG_BUTTON
-            elif buttons[2] == '1'and (self.prev_button == self.REVIEW_BUTTON or self.prev_button == None):
-                self.cur_button = self.REVIEW_BUTTON
-        elif state == LEARNING:
-            pass
-        elif state == SOLVING:
-            pass
-        elif state == GRADED:
-            pass
-        elif state == PROGRESS:
-            pass
-        elif state == REVIEW:
-            pass
-        else:
-            return False
-
-        if self.button_pushed_count == 3:
-            self.button_pushed_count = 0
-            ret = self.cur_button
-            self.cur_button = None
-            return ret
-        else:
-            return False
-
-button_handler = ButtonHandler()
 # virtual button recognition
 def menu_state_handler(msg_):
     msg = msg_.split(';')
-    state_ = state.state
     buttons = msg[BUTTON_IDX]
-    if int(msg[0]) != MENU:
-        network.client.sendto_sunghoi('1')
-        return
-    else:
-        button = button_handler(state, buttons)
-        if button:
-            if button == button_handler.STUDY_BUTTON:
-                state.state = 2
-            elif button == button_handler.PROG_BUTTON:
-                state.state = 3
-            elif button == button_handler.REVIEW_BUTTON:
-                state.state = 4
-            elif button == button_handler.BACK_BUTTON:
-                state.state = 0
-            network.client.sendto_sunghoi(state.state)
+
+    button = button_handler.get_pushed_button(state.get_state(), buttons)
+    if button:
+        if button == button_handler.STUDY_BUTTON:
+            state.set_state(BUFFER)
             network.client.sendto_saehun("1;-1;%s;1" % state.title)
+        elif button == button_handler.PROG_BUTTON:
+            state.set_state(PROGRESS)
+            network.client.sendto_saehun("4;-1");
+        elif button == button_handler.REVIEW_BUTTON:
+            state.set_state(REVIEW)
+            network.client.sendto_saehun("5;-1");
+        elif button == button_handler.BACK_BUTTON:
+            state.set_state(COVER)
+            network.client.sendto_saehun("0;-1");
+        network.client.sendto_sunghoi(state.get_state())
+        
 
-
-
-def study_state_handler(msg_):
-    msg = msg_.split(";")
-    width = int(msg[WIDTH_IDX])
-    height = int(msg[HEIGHT_IDX])
+def buffer_handler(msg_):
+    msg = msg_.split(';')
 
     # for mitigating instable page recognition.
     try:
@@ -151,55 +181,225 @@ def study_state_handler(msg_):
         return
 
     page = state.get_current_page(new_page)
+    #print 'page:', page
 
-    if page == -1:
-        return
+    if page != -1:
+        conn = sqlite3.connect('studylamp.db')
+        cursor = conn.cursor()
+
+        page_state = db.page_state(cursor, page)
+
+        cursor.close()
+        conn.close()
+
+        if page_state == 'LEARNING':
+            changed = state.set_state(LEARNING)
+            if changed:
+                conn = sqlite3.connect('studylamp.db')
+                cursor = conn.cursor()
+                chapter_num, chapter_name = db.chapter_by_page(cursor, page)
+
+                msg_to_send = ';'.join([str(LEARNING), str(page), chapter_name, '-1'])
+                network.client.sendto_saehun(msg_to_send)
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+            learning_state_handler(msg_)
+        elif page_state == 'SOLVING':
+            changed = state.set_state(SOLVING)
+
+            conn = sqlite3.connect('studylamp.db')
+            cursor = conn.cursor()
+            chapter_num, chapter_name = db.chapter_by_page(cursor, page)
+
+            if chapter_num == -1:
+                cursor.close()
+                conn.close()
+                return
+
+            total_prob_num, solved_prob_num, correct, correct_probs, wrong_probs, graded = db.problem_state(cursor, chapter_num)
+            if total_prob_num == solved_prob_num:
+                button.grade_on = True
+            
+            conn.commit()
+            cursor.close()
+            conn.close()
+
+            if changed:
+                msg_to_send = ';'.join([str(SOLVING), str(page), chapter_name, str(total_prob_num), str(solved_prob_num), '-1'])
+                network.client.sendto_saehun(msg_to_send)
+            solving_state_handler(msg_, graded)
+        elif page_state == 'GRADED':
+            changed = state.set_state(GRADED)
+            graded_state_handler(msg_)
+        else:
+            if state.get_state() == SOLVING:
+                solving_state_handler(msg_)
+            changed = False
+
+        if changed:
+            network.client.sendto_sunghoi(state.get_state())
+
+def learning_state_handler(msg_):
+    msg = msg_.split(';')
+    buttons = msg[BUTTON_IDX]
+    cur_state = state.get_state()
+
+    if len(buttons) > 0:
+        button = button_handler.get_pushed_button(cur_state, buttons)
+
+        if button:
+            if button == button_handler.PLAY_BUTTON:
+                # need to be implemented. play video.
+                pass
+            elif button == button_handler.BACK_BUTTON:
+                state.set_state(MENU)
+                network.client.sendto_sunghoi(state.get_state())
+                network.client.sendto_saehun("1;-1;%s;1" % state.title)
+                return
+
+def solving_state_handler(msg_, graded):
+    msg = msg_.split(';')
+    buttons = msg[BUTTON_IDX]
+    cur_state = state.get_state()
+    width = int(msg[WIDTH_IDX])
+    height = int(msg[HEIGHT_IDX])
+    page = int(msg[PAGE_IDX])
+    
+    if len(buttons) > 0:
+        button = button_handler.get_pushed_button(cur_state, buttons)
+
+        if button:
+            if button == button_handler.BACK_BUTTON:
+                state.set_state(MENU)
+                network.client.sendto_saehun("1;-1;%s;1" % state.title)
+                network.client.sendto_sunghoi(state.get_state())
+                return
+            if button == button_handler.GRADE_BUTTON:
+                conn = sqlite3.connect('studylamp.db')
+                cursor = conn.cursor()
+
+                chapter_num, chapter_name = db.chapter_by_page(cursor, page)
+
+                if chapter_num == -1:
+                    cursor.close()
+                    conn.close()
+                    print 'wrong chapter number'
+                    return
+
+                db.grade_one_chapter(cursor, chapter_num)
+                conn.commit()
+                cursor.close()
+                conn.close()
 
     # if check occurs
     if msg[CHECK_X_IDX] != '-1' and msg[CHECK_Y_IDX] != '-1':
+        print msg[CHECK_X_IDX], msg[CHECK_Y_IDX], width, height
         # Current implementation uses only right page number. So we need post processing.
         if float(msg[CHECK_X_IDX]) < width * 0.5:
             check_x = msg[CHECK_X_IDX]
             check_y = msg[CHECK_Y_IDX]
             page = page - 1
-            # page = 40
         else:
-            # this is temporary implementation
-            #check_x = msg[CHECK_X_IDX] - 0.5
             check_x = float(msg[CHECK_X_IDX]) - width * 0.5
             check_y = msg[CHECK_Y_IDX]
-            # page = msg[PAGE_IDX]
-            # page = 40
+
+        print '            check at',page, check_x, ',', check_y, width, height
 
         conn = sqlite3.connect('studylamp.db')
         cursor = conn.cursor()
 
-        page_state = db.page_state(cursor, page)
         chapter_num, chapter_name = db.chapter_by_page(cursor, page)
 
-        if page_state == 'LEARNING':
-            # message format: code;page_number;chapter_name;media_name;back
-            msg_to_send = ';'.join([LEARNING, page, chapter_name, '-1', '-1'])
-            network.client.sendto_saehun(msg_to_send)
-        elif page_state == 'SOLVING':
-            # message format: code;page_number;total_problems;solved_problems;back
-            if check_x != -1 and check_y != -1:
-                db.check_answer(cursor, page, check_x, check_y, width, height)
+        if chapter_num == -1:
+            cursor.close()
+            conn.close()
+            print 'wrong chapter number'
+            return
+        
+        #print page, check_x, check_y, width, height
+        # message format: code;page_number;total_problems;solved_problems;back
 
-            total_prob_num, solved_prob_num = db.problem_state(cursor, chapter_num)
-
-            msg_to_send = ';'.join([SOLVING, str(page), chapter_name, str(total_prob_num), str(solved_prob_num), '-1'])
-            network.client.sendto_saehun(msg_to_send)
-        elif page_state == 'GRADED':
-            # message format: code;page_number;total_problems;correct_answers;problem_number_to_show;back
+        if graded:
             pass
         else:
-            pass
+            db.check_answer(cursor, page, check_x, check_y, width, height)
+
+            total_prob_num, solved_prob_num, correct, correct_probs, wrong_probs, graded = db.problem_state(cursor, chapter_num)
+            if total_prob_num == solved_prob_num:
+                button.grade_on = True
+            msg_to_send = ';'.join([str(SOLVING), str(page), chapter_name, str(total_prob_num), str(solved_prob_num), '-1'])
+            network.client.sendto_saehun(msg_to_send)
 
         conn.commit()
         cursor.close()
         conn.close()
 
-    print 'current page:', page
+def graded_state_handler(msg_):
+    msg = msg_.split(';')
+    buttons = msg[BUTTON_IDX]
+    cur_state = state.get_state()
+
+    if len(buttons) > 0:
+        button = button_handler.get_pushed_button(cur_state, buttons)
+
+        if button:
+            if button == button_handler.BACK_BUTTON:
+                state.set_state(MENU)
+                network.client.sendto_sunghoi(state.get_state())
+
+    width = int(msg[WIDTH_IDX])
+    height = int(msg[HEIGHT_IDX])
+    page = int(msg[PAGE_IDX])
+
+def progress_state_handler(msg_):
+    msg = msg_.split(';')
+    buttons = msg[BUTTON_IDX]
+    cur_state = state.get_state()
+
+    if len(buttons) > 0:
+        button = button_handler.get_pushed_button(cur_state, buttons)
+
+        if button:
+            if button == button_handler.PLAY_BUTTON:
+                # need to be implemented. play video.
+                pass
+            elif button == button_handler.BACK_BUTTON:
+                state.set_state(MENU)
+                network.client.sendto_sunghoi(state.get_state())
+                network.client.sendto_saehun("1;-1;%s;1" % state.title)
+                return
+
+def review_state_handler(msg_):
+    msg = msg_.split(';')
+    buttons = msg[BUTTON_IDX]
+    cur_state = state.get_state()
+
+    if len(buttons) > 0:
+        button = button_handler.get_pushed_button(cur_state, buttons)
+
+        if button:
+            if button == button_handler.PLAY_BUTTON:
+                # need to be implemented. play video.
+                pass
+            elif button == button_handler.BACK_BUTTON:
+                state.set_state(MENU)
+                network.client.sendto_sunghoi(state.get_state())
+                network.client.sendto_saehun("1;-1;%s;1" % state.title)
+                return
+            elif button == button_handler.LEFT_BUTTON:
+                pass
+            elif button == button_handler.RIGHT_BUTTON:
+                pass
+            elif button == button_handler.LIST_BUTTON:
+                pass
+            else:
+                pass
 
 
+
+
+
+
+            

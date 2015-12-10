@@ -50,7 +50,11 @@ class DBManager:
     def page_state(self, cursor, page):
         cursor.execute('SELECT type, chapter_num, level FROM page WHERE page_num=%s' % page)
         result = cursor.fetchone()
-        type = result[0]
+        try:
+            type = result[0]
+        except:
+            print 'wrong page recognized'
+            return False
         chapter_num = result[1]
         level = result[2]
 
@@ -116,7 +120,10 @@ class DBManager:
         WHERE page_num=%s
         ''' % page)
 
-        chapter_num = cursor.fetchone()[0]
+        try:
+            chapter_num = cursor.fetchone()[0]
+        except:
+            return -1,-1
 
         cursor.execute('''
         SELECT chapter_name
@@ -124,8 +131,15 @@ class DBManager:
         WHERE chapter_num=%s
         ''' % chapter_num)
 
-        chapter_name = cursor.fetchone()[0]
 
+        
+        
+        try:
+            chapter_name = cursor.fetchone()[0]
+        except:
+            return -1, -1
+        
+        
         return chapter_num, chapter_name
 
     def problem_state(self, cursor, chapter_num):
@@ -152,7 +166,20 @@ class DBManager:
             else:
                 wrong_probs.append([result[2], result[3]])
 
-        return total, solved, correct, correct_probs, wrong_probs
+        cursor.execute('''
+        SELECT graded
+        FROM chapter
+        WHERE chapter_num=%s
+        ''' % chapter_num)
+
+        result = cursor.fetchone()
+
+        if result[0] == 'TRUE':
+            graded = True
+        else
+            graded = False
+
+        return total, solved, correct, correct_probs, wrong_probs, graded
 
     def grade_one_chapter(self, cursor, chapter_num):
         correct_num = 0
@@ -202,6 +229,12 @@ class DBManager:
                     SET graded=%s AND correct=%s
                     WHERE chapter_num=%s AND level=%s AND prob_num=%s
                     ''' % ('TRUE', 'FALSE', chapter_num, level, prob_num))
+
+        cursor.execute('''
+        UPDATE chapter
+        SET graded=%s
+        WHERE chapter_num=%s
+        ''' % ('TRUE', chapter_num))
 
 
 db = DBManager('studylamp.db')
