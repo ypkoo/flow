@@ -166,7 +166,20 @@ class DBManager:
             else:
                 wrong_probs.append([result[2], result[3]])
 
-        return total, solved, correct, correct_probs, wrong_probs
+        cursor.execute('''
+        SELECT graded
+        FROM chapter
+        WHERE chapter_num=%s
+        ''' % chapter_num)
+
+        result = cursor.fetchone()
+
+        if result[0] == 'TRUE':
+            graded = True
+        else
+            graded = False
+
+        return total, solved, correct, correct_probs, wrong_probs, graded
 
     def grade_one_chapter(self, cursor, chapter_num):
         correct_num = 0
@@ -216,6 +229,12 @@ class DBManager:
                     SET graded=%s AND correct=%s
                     WHERE chapter_num=%s AND level=%s AND prob_num=%s
                     ''' % ('TRUE', 'FALSE', chapter_num, level, prob_num))
+
+        cursor.execute('''
+        UPDATE chapter
+        SET graded=%s
+        WHERE chapter_num=%s
+        ''' % ('TRUE', chapter_num))
 
 
 db = DBManager('studylamp.db')

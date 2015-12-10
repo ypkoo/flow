@@ -3,6 +3,7 @@ __author__ = 'koo'
 from network import *
 
 def main():
+    client.sendto_saehun("0;-1");
     server.start()
 
 

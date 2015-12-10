@@ -73,7 +73,8 @@ if __name__ == "__main__":
         CREATE TABLE chapter(
         chapter_num INT PRIMARY KEY NOT NULL,
         chapter_name TEXT NOT NULL,
-        total_prob_num INT NOT NULL);
+        total_prob_num INT NOT NULL,
+        graded BOOL DEFAULT FALSE);
         '''
     )
 

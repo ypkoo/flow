@@ -8,7 +8,7 @@ from msg_handler import msg_dispatcher
 HOST = 'localhost'
 SEND_PORT1 = 7469
 SEND_PORT2 = 26974
-RECV_PORT = 8888
+RECV_PORT = 6677
 SEND_ADDR1 = (HOST, SEND_PORT1)
 SEND_ADDR2 = (HOST, SEND_PORT2)
 RECV_ADDR = (HOST, RECV_PORT)
