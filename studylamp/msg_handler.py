@@ -219,7 +219,7 @@ def learning_state_handler(msg_):
                 pass
             elif button == button_handler.BACK_BUTTON:
                 state.set_state(MENU)
-                network.client.sendto_sunghoi(state.state)
+                network.client.sendto_sunghoi(state.get_state())
             network.client.sendto_saehun("1;-1;%s;1" % state.title)
 
 def solving_state_handler(msg_):
@@ -232,7 +232,7 @@ def solving_state_handler(msg_):
         if button:
             if button == button_handler.BACK_BUTTON:
                 state.set_state(MENU)
-                network.client.sendto_sunghoi(state.state)
+                network.client.sendto_sunghoi(state.get_state())
 
     width = int(msg[WIDTH_IDX])
     height = int(msg[HEIGHT_IDX])
@@ -290,7 +290,7 @@ def graded_state_handler(msg_):
         if button:
             if button == button_handler.BACK_BUTTON:
                 state.set_state(MENU)
-                network.client.sendto_sunghoi(state.state)
+                network.client.sendto_sunghoi(state.get_state())
 
     width = int(msg[WIDTH_IDX])
     height = int(msg[HEIGHT_IDX])
