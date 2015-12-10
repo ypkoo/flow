@@ -81,9 +81,9 @@ class ButtonHandler(object):
             self.button_pushed_count = self.button_pushed_count + 1
             if buttons[0] == '1' and (self.cur_button == self.LEFT_BUTTON or self.cur_button == None):
                 self.cur_button = self.RIGHT_BUTTON
-            elif buttons[1] == '1' and (self.cur_button == self.LIST_BUTTON or self.cur_button = None):
+            elif buttons[1] == '1' and (self.cur_button == self.LIST_BUTTON or self.cur_button == None):
                 self.cur_button = self.LIST_BUTTON
-            elif buttons[2] == '1' and (self.cur_button == self.RIGHT_BUTTON or self.cur_button = None):
+            elif buttons[2] == '1' and (self.cur_button == self.RIGHT_BUTTON or self.cur_button == None):
                 self.cur_button = self.RIGHT_BUTTON
             else:
                 self.cur_button = None
@@ -188,6 +188,8 @@ def buffer_handler(msg_):
         cursor = conn.cursor()
 
         page_state = db.page_state(cursor, page)
+        if page_state == False:
+            print 'wrong page recognized', page
 
         cursor.close()
         conn.close()
@@ -234,8 +236,7 @@ def buffer_handler(msg_):
             changed = state.set_state(GRADED)
             graded_state_handler(msg_)
         else:
-            if state.get_state() == SOLVING:
-                solving_state_handler(msg_)
+            pass
             changed = False
 
         if changed:
@@ -265,7 +266,14 @@ def solving_state_handler(msg_, graded):
     cur_state = state.get_state()
     width = int(msg[WIDTH_IDX])
     height = int(msg[HEIGHT_IDX])
+    
+    conn = sqlite3.connect('studylamp.db')
+    cursor = conn.cursor()
     page = int(msg[PAGE_IDX])
+    page = state.get_current_page(page)
+
+    cursor.close()
+    conn.close()
     
     if len(buttons) > 0:
         button = button_handler.get_pushed_button(cur_state, buttons)
@@ -298,14 +306,12 @@ def solving_state_handler(msg_, graded):
         print msg[CHECK_X_IDX], msg[CHECK_Y_IDX], width, height
         # Current implementation uses only right page number. So we need post processing.
         if float(msg[CHECK_X_IDX]) < width * 0.5:
-            check_x = msg[CHECK_X_IDX]
-            check_y = msg[CHECK_Y_IDX]
             page = page - 1
-        else:
-            check_x = float(msg[CHECK_X_IDX]) - width * 0.5
-            check_y = msg[CHECK_Y_IDX]
 
-        print '            check at',page, check_x, ',', check_y, width, height
+        check_x = msg[CHECK_X_IDX]
+        check_y = msg[CHECK_Y_IDX]
+
+        print '            check at',page, check_x, check_y, width, height
 
         conn = sqlite3.connect('studylamp.db')
         cursor = conn.cursor()
@@ -322,11 +328,11 @@ def solving_state_handler(msg_, graded):
         # message format: code;page_number;total_problems;solved_problems;back
 
         if graded:
-            pass
+            prob_num = prob_num_by_check(cursor, page, check_x, check_y, width, height)
         else:
             db.check_answer(cursor, page, check_x, check_y, width, height)
 
-            total_prob_num, solved_prob_num, correct, correct_probs, wrong_probs, graded = db.problem_state(cursor, chapter_num)
+            total_prob_num, solved_prob_num, correct, correct_probs, wrong_probs, graded_ = db.problem_state(cursor, chapter_num)
             if total_prob_num == solved_prob_num:
                 button.grade_on = True
             msg_to_send = ';'.join([str(SOLVING), str(page), chapter_name, str(total_prob_num), str(solved_prob_num), '-1'])

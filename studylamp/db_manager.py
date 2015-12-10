@@ -51,16 +51,16 @@ class DBManager:
         cursor.execute('SELECT type, chapter_num, level FROM page WHERE page_num=%s' % page)
         result = cursor.fetchone()
         try:
-            type = result[0]
+            type_ = result[0]
         except:
-            print 'wrong page recognized'
+            #print 'wrong page recognized'
             return False
         chapter_num = result[1]
         level = result[2]
 
-        if type == 'LEARNING':
+        if type_ == 'LEARNING':
             return 'LEARNING'
-        elif type == 'EXERCISE':
+        elif type_ == 'EXERCISE':
             cursor.execute('''
             SELECT graded
             FROM user_answer
@@ -94,13 +94,13 @@ class DBManager:
         min_dist = 99999
         min_result = None
         for result in results:
-            dist = hypot(float(check_x) - result[0]*width, float(check_y) - result[1]*height)
-            print check_x, result[0]*width, check_y, result[1]*height, result[2]
+            dist = hypot(int(check_x) - result[0], int(check_y) - result[1])
+            print check_x, result[0], check_y, result[1], result[2]
             if dist < min_dist:
                 min_dist = dist
                 min_result = result
 
-        if min_dist < 100:
+        if min_dist < 20:
             prob_num = min_result[2]
             ans_num = min_result[3]
 
@@ -110,9 +110,46 @@ class DBManager:
             WHERE chapter_num=%s AND level=%s AND prob_num=%s
             ''' % (ans_num, chapter_num, level, prob_num))
 
-            print 'answer %s checked at chapter %s, level %s, problem %s' % (ans_num, chapter_num, level, prob_num)
+            print '(%s, %s) checked at chapter %s, level %s' % (prob_num, ans_num, chapter_num, level)
 
+    def prob_num_by_check(self, cursor, page, check_x, check_y, width, height):
+        # fetch chapter and level information corresponding to page
+        cursor.execute('''
+        SELECT chapter_num, level
+        FROM page
+        WHERE page_num=%s
+        ''' % page)
+        result = cursor.fetchone()
+        chapter_num = result[0]
+        level = result[1]
 
+        # fetch answer location information corresponding to page
+        cursor.execute('''
+        SELECT x, y, prob_num, ans_num
+        FROM ans_location
+        WHERE page_num=%s
+        ''' % page)
+        results = cursor.fetchall()
+
+        # find problem and answer number which has minimum distance from checked location
+        min_dist = 99999
+        min_result = None
+        for result in results:
+            dist = hypot(int(check_x) - result[0], int(check_y) - result[1])
+            print check_x, result[0], check_y, result[1], result[2]
+            if dist < min_dist:
+                min_dist = dist
+                min_result = result
+
+        if min_dist < 30:
+            prob_num = min_result[2]
+            ans_num = min_result[3]
+
+        
+        prob_num = min_result[2]
+
+        return prob_num
+    
     def chapter_by_page(self, cursor, page):
         cursor.execute('''
         SELECT chapter_num
@@ -176,7 +213,7 @@ class DBManager:
 
         if result[0] == 'TRUE':
             graded = True
-        else
+        else:
             graded = False
 
         return total, solved, correct, correct_probs, wrong_probs, graded

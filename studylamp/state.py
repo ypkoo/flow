@@ -1,5 +1,8 @@
 __author__ = 'koo'
 
+import sqlite3
+from db_manager import db
+
 # states
 COVER = 0
 MENU = 1
@@ -12,7 +15,7 @@ BUFFER = 7
 
 class StateManager:
     def __init__(self):
-        self._state = COVER
+        self._state = BUFFER
         self._title = None
         self.cur_page = -1
         self.page_count = 0
@@ -48,13 +51,20 @@ class StateManager:
         if self.page_count == 3: 
             # recognize 3 consecutive new pages. If all 3 pages are same, change current page.
             if self.new_pages[0] == self.new_pages[1] and self.new_pages[1] == self.new_pages[2]:
-                self.cur_page = new_page
+                conn = sqlite3.connect('studylamp.db')
+                cursor = conn.cursor()
+                if db.page_state(cursor, new_page) != False:
+                    #print 'new page', new_page
+                    self.cur_page = new_page
+                cursor.close()
+                conn.close()
 
             self.new_pages[0] = self.new_pages[1]
             self.new_pages[1] = self.new_pages[2]
             self.new_pages.pop()
             self.page_count = self.page_count - 1
 
+        #print 'page', self.cur_page
         return self.cur_page
 
 
